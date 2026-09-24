@@ -49,7 +49,7 @@ The blueprint uses `ble_esl.write_guarded`: with BLE ESL's **Prevent Duplicate S
 
 ## Install the waste-collection blueprint
 
-1. Import [waste_collection_eink.yaml](https://github.com/defuuss/gicisky-diabetes-eink/blob/main/blueprints/script/waste_collection_eink.yaml) from Home Assistant’s **Blueprint import** screen, or copy it to `/config/blueprints/script/<your-folder>/`.
+1. Import [waste_collection_eink.yaml](https://github.com/defuuss/home-assistant-eink-blueprints/blob/main/blueprints/script/waste_collection_eink.yaml) from Home Assistant’s **Blueprint import** screen, or copy it to `/config/blueprints/script/<your-folder>/`.
 2. Create a script from **Waste collection e-ink schedule**.
 3. Select the display or displays and all relevant Waste Collection Schedule sensors. Their numeric states must be the days until collection.
 4. Run the generated script when a waste sensor changes and once just after midnight, so the `Today`/`Tomorrow` text stays current.
