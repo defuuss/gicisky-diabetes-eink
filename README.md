@@ -56,6 +56,10 @@ The blueprint uses `ble_esl.write_guarded`: with BLE ESL's **Prevent Duplicate S
 
 The blueprint sorts all selected sensors by their numeric state, shows the closest three collections, and turns a pickup red when it is today or tomorrow. Its five category images are bundled under [`assets/waste/`](assets/waste/) and loaded through public raw GitHub URLs, so users do not need to copy image files into `/config/www`. The matching recognizes `bio`/`organic`, `valorlux`/`packaging`, `recycling`, `paper`/`glass`, and falls back to general waste.
 
+### Waste-display preview
+
+![Example waste collection display](docs/preview/waste_collection_example.png)
+
 `examples/waste_collection_eink.yaml` shows the resulting script configuration with generic, replaceable sensor names.
 
 ## Triggering from an automation
