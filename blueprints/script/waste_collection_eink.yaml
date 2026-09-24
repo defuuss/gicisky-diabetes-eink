@@ -7,16 +7,12 @@ blueprint:
   input:
     eink_devices:
       name: E-ink displays
-      description: Select one or more BLE ESL displays.
       selector:
         device:
           multiple: true
     waste_sensors:
       name: Waste-collection sensors
-      description: >-
-        Select one or more sensors whose numeric state is the number of days
-        until collection. Sensors from the Waste Collection Schedule integration
-        work directly.
+      description: Select sensors whose numeric state is the days until collection.
       selector:
         entity:
           multiple: true
@@ -33,8 +29,6 @@ variables:
   display_title: !input title
 
 sequence:
-  # Guarded writes coalesce sensor updates and skip unchanged frames when the
-  # BLE ESL integration's Prevent Duplicate Send option is enabled.
   - action: ble_esl.write_guarded
     target:
       device_id: !input eink_devices
@@ -57,71 +51,43 @@ sequence:
           y_end: 28
           width: 2
           fill: black
-        - type: icon
-          value: >-
-            {% set items = namespace(value=[]) %}
-            {% for entity_id in waste_entities %}
-              {% set days = states(entity_id) | int(99) %}
-              {% if days >= 0 and days < 99 %}
-                {% set items.value = items.value + [(days, entity_id)] %}
-              {% endif %}
+        - type: dlimg
+          url: >-
+            {% set candidates = namespace(items=[]) %}
+            {% for entity in waste_entities %}
+              {% set days = states(entity) | int(99) %}
+              {% if days >= 0 and days < 99 %}{% set candidates.items = candidates.items + [(days, entity)] %}{% endif %}
             {% endfor %}
-            {% set waste = items.value | sort %}
-            {% if waste | length > 0 %}
-              {{ state_attr(waste[0][1], 'icon') | default('mdi:trash-can', true) | replace('mdi:', '') }}
-            {% else %}trash-can{% endif %}
-          x: 50
-          y: 38
+            {% set waste = candidates.items | sort %}
+            {% set source = ((waste[0][1] ~ ' ' ~ state_attr(waste[0][1], 'friendly_name') | default('', true)) if waste | length > 0 else '') | lower %}
+            {% if 'bio' in source or 'organic' in source %}https://raw.githubusercontent.com/defuuss/home-assistant-eink-blueprints/main/assets/waste/organic.png
+            {% elif 'valorlux' in source or 'packag' in source %}https://raw.githubusercontent.com/defuuss/home-assistant-eink-blueprints/main/assets/waste/valorlux2.png
+            {% elif 'recycl' in source %}https://raw.githubusercontent.com/defuuss/home-assistant-eink-blueprints/main/assets/waste/recycle.png
+            {% elif 'paper' in source or 'glass' in source %}https://raw.githubusercontent.com/defuuss/home-assistant-eink-blueprints/main/assets/waste/paper.png
+            {% else %}https://raw.githubusercontent.com/defuuss/home-assistant-eink-blueprints/main/assets/waste/waste.png{% endif %}
+          x: 26
+          y: 34
+          xsize: 48
+          ysize: 48
           anchor: mt
-          size: 34
-          color: black
         - type: text
           value: >-
-            {% set items = namespace(value=[]) %}
-            {% for entity_id in waste_entities %}
-              {% set days = states(entity_id) | int(99) %}
-              {% if days >= 0 and days < 99 %}
-                {% set items.value = items.value + [(days, entity_id)] %}
-              {% endif %}
-            {% endfor %}
-            {% set waste = items.value | sort %}
-            {% if waste | length > 0 %}
-              {{ state_attr(waste[0][1], 'friendly_name') | default(waste[0][1], true) | truncate(15, true, '') }}
-            {% else %}No collection{% endif %}
+            {% set candidates = namespace(items=[]) %}{% for entity in waste_entities %}{% set days = states(entity) | int(99) %}{% if days >= 0 and days < 99 %}{% set candidates.items = candidates.items + [(days, entity)] %}{% endif %}{% endfor %}{% set waste = candidates.items | sort %}{% if waste | length > 0 %}{{ state_attr(waste[0][1], 'friendly_name') | default(waste[0][1], true) | truncate(15, true, '') }}{% else %}No collection{% endif %}
           x: 50
-          y: 77
+          y: 83
           anchor: mt
           size: 14
           color: black
           font: fonts/NotoSansKR-Bold.ttf
         - type: text
           value: >-
-            {% set items = namespace(value=[]) %}
-            {% for entity_id in waste_entities %}
-              {% set days = states(entity_id) | int(99) %}
-              {% if days >= 0 and days < 99 %}
-                {% set items.value = items.value + [(days, entity_id)] %}
-              {% endif %}
-            {% endfor %}
-            {% set waste = items.value | sort %}
-            {% if waste | length == 0 %}—
-            {% elif waste[0][0] == 0 %}Today
-            {% elif waste[0][0] == 1 %}Tomorrow
-            {% else %}In {{ waste[0][0] }}d{% endif %}
+            {% set candidates = namespace(items=[]) %}{% for entity in waste_entities %}{% set days = states(entity) | int(99) %}{% if days >= 0 and days < 99 %}{% set candidates.items = candidates.items + [(days, entity)] %}{% endif %}{% endfor %}{% set waste = candidates.items | sort %}{% if waste | length == 0 %}—{% elif waste[0][0] == 0 %}Today{% elif waste[0][0] == 1 %}Tomorrow{% else %}In {{ waste[0][0] }}d{% endif %}
           x: 50
-          y: 101
+          y: 103
           anchor: mt
-          size: 20
+          size: 18
           color: >-
-            {% set items = namespace(value=[]) %}
-            {% for entity_id in waste_entities %}
-              {% set days = states(entity_id) | int(99) %}
-              {% if days >= 0 and days < 99 %}
-                {% set items.value = items.value + [(days, entity_id)] %}
-              {% endif %}
-            {% endfor %}
-            {% set waste = items.value | sort %}
-            {% if waste | length > 0 and waste[0][0] <= 1 %}red{% else %}black{% endif %}
+            {% set candidates = namespace(items=[]) %}{% for entity in waste_entities %}{% set days = states(entity) | int(99) %}{% if days >= 0 and days < 99 %}{% set candidates.items = candidates.items + [(days, entity)] %}{% endif %}{% endfor %}{% set waste = candidates.items | sort %}{% if waste | length > 0 and waste[0][0] <= 1 %}red{% else %}black{% endif %}
           font: fonts/NotoSansKR-Bold.ttf
         - type: line
           x_start: 99
@@ -130,71 +96,32 @@ sequence:
           y_end: 124
           width: 1
           fill: gray
-        - type: icon
-          value: >-
-            {% set items = namespace(value=[]) %}
-            {% for entity_id in waste_entities %}
-              {% set days = states(entity_id) | int(99) %}
-              {% if days >= 0 and days < 99 %}
-                {% set items.value = items.value + [(days, entity_id)] %}
-              {% endif %}
-            {% endfor %}
-            {% set waste = items.value | sort %}
-            {% if waste | length > 1 %}
-              {{ state_attr(waste[1][1], 'icon') | default('mdi:trash-can', true) | replace('mdi:', '') }}
-            {% else %}trash-can{% endif %}
-          x: 148
-          y: 38
+        - type: dlimg
+          url: >-
+            {% set candidates = namespace(items=[]) %}{% for entity in waste_entities %}{% set days = states(entity) | int(99) %}{% if days >= 0 and days < 99 %}{% set candidates.items = candidates.items + [(days, entity)] %}{% endif %}{% endfor %}{% set waste = candidates.items | sort %}{% set source = ((waste[1][1] ~ ' ' ~ state_attr(waste[1][1], 'friendly_name') | default('', true)) if waste | length > 1 else '') | lower %}{% if 'bio' in source or 'organic' in source %}https://raw.githubusercontent.com/defuuss/home-assistant-eink-blueprints/main/assets/waste/organic.png{% elif 'valorlux' in source or 'packag' in source %}https://raw.githubusercontent.com/defuuss/home-assistant-eink-blueprints/main/assets/waste/valorlux2.png{% elif 'recycl' in source %}https://raw.githubusercontent.com/defuuss/home-assistant-eink-blueprints/main/assets/waste/recycle.png{% elif 'paper' in source or 'glass' in source %}https://raw.githubusercontent.com/defuuss/home-assistant-eink-blueprints/main/assets/waste/paper.png{% else %}https://raw.githubusercontent.com/defuuss/home-assistant-eink-blueprints/main/assets/waste/waste.png{% endif %}
+          x: 124
+          y: 34
+          xsize: 48
+          ysize: 48
           anchor: mt
-          size: 34
-          color: black
         - type: text
           value: >-
-            {% set items = namespace(value=[]) %}
-            {% for entity_id in waste_entities %}
-              {% set days = states(entity_id) | int(99) %}
-              {% if days >= 0 and days < 99 %}
-                {% set items.value = items.value + [(days, entity_id)] %}
-              {% endif %}
-            {% endfor %}
-            {% set waste = items.value | sort %}
-            {% if waste | length > 1 %}
-              {{ state_attr(waste[1][1], 'friendly_name') | default(waste[1][1], true) | truncate(15, true, '') }}
-            {% else %}—{% endif %}
+            {% set candidates = namespace(items=[]) %}{% for entity in waste_entities %}{% set days = states(entity) | int(99) %}{% if days >= 0 and days < 99 %}{% set candidates.items = candidates.items + [(days, entity)] %}{% endif %}{% endfor %}{% set waste = candidates.items | sort %}{% if waste | length > 1 %}{{ state_attr(waste[1][1], 'friendly_name') | default(waste[1][1], true) | truncate(15, true, '') }}{% else %}—{% endif %}
           x: 148
-          y: 77
+          y: 83
           anchor: mt
           size: 14
           color: black
           font: fonts/NotoSansKR-Bold.ttf
         - type: text
           value: >-
-            {% set items = namespace(value=[]) %}
-            {% for entity_id in waste_entities %}
-              {% set days = states(entity_id) | int(99) %}
-              {% if days >= 0 and days < 99 %}
-                {% set items.value = items.value + [(days, entity_id)] %}
-              {% endif %}
-            {% endfor %}
-            {% set waste = items.value | sort %}
-            {% if waste | length <= 1 %}—
-            {% elif waste[1][0] == 0 %}Today
-            {% elif waste[1][0] == 1 %}Tomorrow
-            {% else %}In {{ waste[1][0] }}d{% endif %}
+            {% set candidates = namespace(items=[]) %}{% for entity in waste_entities %}{% set days = states(entity) | int(99) %}{% if days >= 0 and days < 99 %}{% set candidates.items = candidates.items + [(days, entity)] %}{% endif %}{% endfor %}{% set waste = candidates.items | sort %}{% if waste | length <= 1 %}—{% elif waste[1][0] == 0 %}Today{% elif waste[1][0] == 1 %}Tomorrow{% else %}In {{ waste[1][0] }}d{% endif %}
           x: 148
-          y: 101
+          y: 103
           anchor: mt
-          size: 20
+          size: 18
           color: >-
-            {% set items = namespace(value=[]) %}
-            {% for entity_id in waste_entities %}
-              {% set days = states(entity_id) | int(99) %}
-              {% if days >= 0 and days < 99 %}
-                {% set items.value = items.value + [(days, entity_id)] %}
-              {% endif %}
-            {% endfor %}
-            {% set waste = items.value | sort %}
-            {% if waste | length > 1 and waste[1][0] <= 1 %}red{% else %}black{% endif %}
+            {% set candidates = namespace(items=[]) %}{% for entity in waste_entities %}{% set days = states(entity) | int(99) %}{% if days >= 0 and days < 99 %}{% set candidates.items = candidates.items + [(days, entity)] %}{% endif %}{% endfor %}{% set waste = candidates.items | sort %}{% if waste | length > 1 and waste[1][0] <= 1 %}red{% else %}black{% endif %}
           font: fonts/NotoSansKR-Bold.ttf
         - type: line
           x_start: 197
@@ -203,69 +130,30 @@ sequence:
           y_end: 124
           width: 1
           fill: gray
-        - type: icon
-          value: >-
-            {% set items = namespace(value=[]) %}
-            {% for entity_id in waste_entities %}
-              {% set days = states(entity_id) | int(99) %}
-              {% if days >= 0 and days < 99 %}
-                {% set items.value = items.value + [(days, entity_id)] %}
-              {% endif %}
-            {% endfor %}
-            {% set waste = items.value | sort %}
-            {% if waste | length > 2 %}
-              {{ state_attr(waste[2][1], 'icon') | default('mdi:trash-can', true) | replace('mdi:', '') }}
-            {% else %}trash-can{% endif %}
-          x: 246
-          y: 38
+        - type: dlimg
+          url: >-
+            {% set candidates = namespace(items=[]) %}{% for entity in waste_entities %}{% set days = states(entity) | int(99) %}{% if days >= 0 and days < 99 %}{% set candidates.items = candidates.items + [(days, entity)] %}{% endif %}{% endfor %}{% set waste = candidates.items | sort %}{% set source = ((waste[2][1] ~ ' ' ~ state_attr(waste[2][1], 'friendly_name') | default('', true)) if waste | length > 2 else '') | lower %}{% if 'bio' in source or 'organic' in source %}https://raw.githubusercontent.com/defuuss/home-assistant-eink-blueprints/main/assets/waste/organic.png{% elif 'valorlux' in source or 'packag' in source %}https://raw.githubusercontent.com/defuuss/home-assistant-eink-blueprints/main/assets/waste/valorlux2.png{% elif 'recycl' in source %}https://raw.githubusercontent.com/defuuss/home-assistant-eink-blueprints/main/assets/waste/recycle.png{% elif 'paper' in source or 'glass' in source %}https://raw.githubusercontent.com/defuuss/home-assistant-eink-blueprints/main/assets/waste/paper.png{% else %}https://raw.githubusercontent.com/defuuss/home-assistant-eink-blueprints/main/assets/waste/waste.png{% endif %}
+          x: 222
+          y: 34
+          xsize: 48
+          ysize: 48
           anchor: mt
-          size: 34
-          color: black
         - type: text
           value: >-
-            {% set items = namespace(value=[]) %}
-            {% for entity_id in waste_entities %}
-              {% set days = states(entity_id) | int(99) %}
-              {% if days >= 0 and days < 99 %}
-                {% set items.value = items.value + [(days, entity_id)] %}
-              {% endif %}
-            {% endfor %}
-            {% set waste = items.value | sort %}
-            {% if waste | length > 2 %}
-              {{ state_attr(waste[2][1], 'friendly_name') | default(waste[2][1], true) | truncate(15, true, '') }}
-            {% else %}—{% endif %}
+            {% set candidates = namespace(items=[]) %}{% for entity in waste_entities %}{% set days = states(entity) | int(99) %}{% if days >= 0 and days < 99 %}{% set candidates.items = candidates.items + [(days, entity)] %}{% endif %}{% endfor %}{% set waste = candidates.items | sort %}{% if waste | length > 2 %}{{ state_attr(waste[2][1], 'friendly_name') | default(waste[2][1], true) | truncate(15, true, '') }}{% else %}—{% endif %}
           x: 246
-          y: 77
+          y: 83
           anchor: mt
           size: 14
           color: black
           font: fonts/NotoSansKR-Bold.ttf
         - type: text
           value: >-
-            {% set items = namespace(value=[]) %}
-            {% for entity_id in waste_entities %}
-              {% set days = states(entity_id) | int(99) %}
-              {% if days >= 0 and days < 99 %}
-                {% set items.value = items.value + [(days, entity_id)] %}
-              {% endif %}
-            {% endfor %}
-            {% set waste = items.value | sort %}
-            {% if waste | length <= 2 %}—
-            {% elif waste[2][0] == 0 %}Today
-            {% elif waste[2][0] == 1 %}Tomorrow
-            {% else %}In {{ waste[2][0] }}d{% endif %}
+            {% set candidates = namespace(items=[]) %}{% for entity in waste_entities %}{% set days = states(entity) | int(99) %}{% if days >= 0 and days < 99 %}{% set candidates.items = candidates.items + [(days, entity)] %}{% endif %}{% endfor %}{% set waste = candidates.items | sort %}{% if waste | length <= 2 %}—{% elif waste[2][0] == 0 %}Today{% elif waste[2][0] == 1 %}Tomorrow{% else %}In {{ waste[2][0] }}d{% endif %}
           x: 246
-          y: 101
+          y: 103
           anchor: mt
-          size: 20
+          size: 18
           color: >-
-            {% set items = namespace(value=[]) %}
-            {% for entity_id in waste_entities %}
-              {% set days = states(entity_id) | int(99) %}
-              {% if days >= 0 and days < 99 %}
-                {% set items.value = items.value + [(days, entity_id)] %}
-              {% endif %}
-            {% endfor %}
-            {% set waste = items.value | sort %}
-            {% if waste | length > 2 and waste[2][0] <= 1 %}red{% else %}black{% endif %}
+            {% set candidates = namespace(items=[]) %}{% for entity in waste_entities %}{% set days = states(entity) | int(99) %}{% if days >= 0 and days < 99 %}{% set candidates.items = candidates.items + [(days, entity)] %}{% endif %}{% endfor %}{% set waste = candidates.items | sort %}{% if waste | length > 2 and waste[2][0] <= 1 %}red{% else %}black{% endif %}
           font: fonts/NotoSansKR-Bold.ttf

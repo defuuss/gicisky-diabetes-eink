@@ -54,7 +54,7 @@ The blueprint uses `ble_esl.write_guarded`: with BLE ESL's **Prevent Duplicate S
 3. Select the display or displays and all relevant Waste Collection Schedule sensors. Their numeric states must be the days until collection.
 4. Run the generated script when a waste sensor changes and once just after midnight, so the `Today`/`Tomorrow` text stays current.
 
-The blueprint sorts all selected sensors by their numeric state, shows the closest three collections, uses each sensor’s friendly name and icon, and turns a pickup red when it is today or tomorrow. It deliberately has no dependency on local image files or personal sensor IDs.
+The blueprint sorts all selected sensors by their numeric state, shows the closest three collections, and turns a pickup red when it is today or tomorrow. Its five category images are bundled under [`assets/waste/`](assets/waste/) and loaded through public raw GitHub URLs, so users do not need to copy image files into `/config/www`. The matching recognizes `bio`/`organic`, `valorlux`/`packaging`, `recycling`, `paper`/`glass`, and falls back to general waste.
 
 `examples/waste_collection_eink.yaml` shows the resulting script configuration with generic, replaceable sensor names.
 
