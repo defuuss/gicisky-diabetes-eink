@@ -6,10 +6,10 @@ They use the actively maintained [`BLE ESL`](https://github.com/eigger/hass-ble-
 
 ## Included blueprints
 
-- [Diabetes maintenance display](blueprints/script/diabetes_maintenance_eink.yaml) — catheter, CGM, and pump-battery replacement information.
-- [Waste collection schedule](blueprints/script/waste_collection_eink.yaml) — the next three Waste Collection Schedule pickups.
+- [Diabetes maintenance display](https://github.com/defuuss/home-assistant-eink-blueprints/blob/main/blueprints/script/diabetes_maintenance_eink.yaml) — catheter, CGM, and pump-battery replacement information.
+- [Waste collection schedule](https://github.com/defuuss/home-assistant-eink-blueprints/blob/main/blueprints/script/waste_collection_eink.yaml) — the next three Waste Collection Schedule pickups.
 
-## What it displays
+## Diabetes maintenance display
 
 - Catheter due status
 - CGM due status
@@ -18,36 +18,30 @@ They use the actively maintained [`BLE ESL`](https://github.com/eigger/hass-ble-
 
 The display is sent to every device selected in the blueprint, so the same information can be mirrored across multiple labels.
 
-## Requirements
+### Common requirements
 
 1. Home Assistant with the **BLE ESL** custom integration installed via HACS.
 2. One or more paired 2.9-inch 296×128 BWR labels supported by BLE ESL.
-3. Four Home Assistant sensor entities whose states are ISO datetime values:
-   - catheter next-change time
-   - CGM next-change time
-   - predicted pump-battery empty time
-   - pump battery percentage
-4. A Bluetooth adapter or ESPHome Bluetooth proxy that can reach the labels.
+3. A Bluetooth adapter or ESPHome Bluetooth proxy that can reach the labels.
 
-## Install the diabetes-maintenance blueprint
+### Install
 
-1. Download `blueprints/script/diabetes_maintenance_eink.yaml`.
-2. Copy it into Home Assistant at:
-
-   ```text
-   /config/blueprints/script/<your-folder>/diabetes_maintenance_eink.yaml
-   ```
-
-3. Restart Home Assistant or reload scripts.
-4. Go to **Settings → Automations & scenes → Blueprints**, find **Diabetes maintenance e-ink display**, and choose **Create script**.
-5. Select one or more e-ink devices and the four requested sensors.
-6. Run the created script once to render the display. Invoke it from an automation whenever one of the source sensors changes, or on a scheduled refresh.
+1. Import [diabetes_maintenance_eink.yaml](https://github.com/defuuss/home-assistant-eink-blueprints/blob/main/blueprints/script/diabetes_maintenance_eink.yaml) from Home Assistant’s **Blueprint import** screen, or copy it to `/config/blueprints/script/<your-folder>/`.
+2. Create a script from **Diabetes maintenance e-ink display**.
+3. Select one or more displays and four ISO-datetime sensor entities: catheter due, CGM due, pump-battery percentage, and predicted pump-battery-empty time.
+4. Run the generated script when a source sensor changes, or on a scheduled refresh.
 
 The blueprint uses `ble_esl.write_guarded`: with BLE ESL's **Prevent Duplicate Send** option enabled, unchanged frames are skipped and bursts of sensor updates are coalesced. This reduces BLE traffic and avoids redundant e-ink refreshes. Set the integration's debounce delay to suit the update frequency you want.
 
+### Diabetes-display preview
+
+![Example diabetes maintenance display](docs/preview/diabetes_maintenance_example.png)
+
 `examples/diabetes_maintenance_eink.yaml` shows the resulting script configuration. It deliberately contains placeholders instead of device IDs or personal sensor names.
 
-## Install the waste-collection blueprint
+## Waste collection schedule
+
+### Install
 
 1. Import [waste_collection_eink.yaml](https://github.com/defuuss/home-assistant-eink-blueprints/blob/main/blueprints/script/waste_collection_eink.yaml) from Home Assistant’s **Blueprint import** screen, or copy it to `/config/blueprints/script/<your-folder>/`.
 2. Create a script from **Waste collection e-ink schedule**.
@@ -62,9 +56,11 @@ The blueprint sorts all selected sensors by their numeric state, shows the close
 
 `examples/waste_collection_eink.yaml` shows the resulting script configuration with generic, replaceable sensor names.
 
-## Triggering from an automation
+## Refresh automation
 
 Create an automation that calls the generated script when any source sensor changes, plus a daily time trigger if you want the `Today`/`Tomorrow` labels to roll over at midnight.
+
+For the waste blueprint, use the selected waste sensors as the state triggers and retain the same midnight time trigger.
 
 ```yaml
 triggers:
