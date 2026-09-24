@@ -38,6 +38,8 @@ The display is sent to every device selected in the blueprint, so the same infor
 5. Select one or more e-ink devices and the four requested sensors.
 6. Run the created script once to render the display. Invoke it from an automation whenever one of the source sensors changes, or on a scheduled refresh.
 
+The blueprint uses `ble_esl.write_guarded`: with BLE ESL's **Prevent Duplicate Send** option enabled, unchanged frames are skipped and bursts of sensor updates are coalesced. This reduces BLE traffic and avoids redundant e-ink refreshes. Set the integration's debounce delay to suit the update frequency you want.
+
 `examples/diabetes_maintenance_eink.yaml` shows the resulting script configuration. It deliberately contains placeholders instead of device IDs or personal sensor names.
 
 ## Triggering from an automation
@@ -61,7 +63,7 @@ mode: single
 
 ## Sharing
 
-This is a script blueprint, not a scene. Script blueprints are the portable Home Assistant format for a reusable, configurable display action. Once this repository is on GitHub, people can import the raw YAML file from Home Assistant’s Blueprint import screen or copy it to their local `blueprints/script/` folder.
+This is a script blueprint, not a scene. Script blueprints are the portable Home Assistant format for a reusable, configurable display action. Import it from [GitHub](https://github.com/defuuss/gicisky-diabetes-eink/blob/main/blueprints/script/diabetes_maintenance_eink.yaml) in Home Assistant’s Blueprint import screen, or copy it to your local `blueprints/script/` folder.
 
 Do not commit Home Assistant `.storage`, access tokens, Bluetooth device IDs, or health data. The blueprint itself has no personal IDs or credentials.
 

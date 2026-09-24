@@ -49,7 +49,9 @@ variables:
   display_title: !input title
 
 sequence:
-  - action: ble_esl.write
+  # Guarded writes avoid unnecessary BLE transfers when several source
+  # sensors update together or the rendered display has not changed.
+  - action: ble_esl.write_guarded
     target:
       device_id: !input eink_devices
     data:

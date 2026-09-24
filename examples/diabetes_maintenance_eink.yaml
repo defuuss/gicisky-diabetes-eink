@@ -1,6 +1,6 @@
 alias: Diabetes maintenance display
 use_blueprint:
-  path: YOUR_GITHUB_OWNER/diabetes_maintenance_eink.yaml
+  path: defuuss/diabetes_maintenance_eink.yaml
   input:
     eink_devices:
       - YOUR_BLE_ESL_DEVICE_ID
