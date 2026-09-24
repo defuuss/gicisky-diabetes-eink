@@ -1,0 +1,207 @@
+blueprint:
+  name: Diabetes maintenance e-ink display
+  description: >-
+    Render catheter, CGM, and pump-battery due dates on one or more 2.9-inch
+    296x128 BWR BLE ESL displays using the BLE ESL integration.
+  domain: script
+  input:
+    eink_devices:
+      name: E-ink displays
+      description: Select one or more BLE ESL / Gicisky-compatible displays.
+      selector:
+        device:
+          multiple: true
+    catheter_due:
+      name: Catheter next-change sensor
+      selector:
+        entity:
+          filter:
+            - domain: sensor
+    cgm_due:
+      name: CGM next-change sensor
+      selector:
+        entity:
+          filter:
+            - domain: sensor
+    pump_battery_level:
+      name: Pump battery-level sensor
+      selector:
+        entity:
+          filter:
+            - domain: sensor
+    pump_battery_due:
+      name: Predicted pump-battery-empty sensor
+      selector:
+        entity:
+          filter:
+            - domain: sensor
+    title:
+      name: Display title
+      default: Tasks
+      selector:
+        text:
+
+variables:
+  catheter_due_entity: !input catheter_due
+  cgm_due_entity: !input cgm_due
+  pump_battery_level_entity: !input pump_battery_level
+  pump_battery_due_entity: !input pump_battery_due
+  display_title: !input title
+
+sequence:
+  - action: ble_esl.write
+    target:
+      device_id: !input eink_devices
+    data:
+      rotate: 0
+      background: white
+      payload:
+        - type: text
+          value: "{{ display_title }} · {{ now().strftime('%d %b %Y') }}"
+          x: 148
+          y: 4
+          anchor: mt
+          size: 22
+          color: black
+          font: fonts/NotoSansKR-Bold.ttf
+        - type: line
+          x_start: 5
+          y_start: 28
+          x_end: 291
+          y_end: 28
+          width: 2
+          fill: black
+        - type: icon
+          value: needle
+          x: 8
+          y: 32
+          size: 28
+          color: black
+        - type: text
+          value: Catheter
+          x: 44
+          y: 36
+          anchor: lt
+          size: 18
+          color: black
+          font: fonts/NotoSansKR-Bold.ttf
+        - type: text
+          value: >-
+            {% set value = states(catheter_due_entity) %}
+            {% if value in ['unknown', 'unavailable', 'none', ''] %}
+              —
+            {% else %}
+              {% set days = (as_datetime(value).date() - now().date()).days %}
+              {% if (as_datetime(value) - now()).total_seconds() <= 0 %}OVERDUE
+              {% elif days == 0 %}Today
+              {% elif days == 1 %}Tomorrow
+              {% else %}In {{ days }}d{% endif %}
+            {% endif %}
+          x: 290
+          y: 36
+          anchor: rt
+          size: 18
+          color: >-
+            {% set value = states(catheter_due_entity) %}
+            {% if value not in ['unknown', 'unavailable', 'none', ''] and
+                  (as_datetime(value) - now()).total_seconds() <= 86400 %}
+              red
+            {% else %}black{% endif %}
+          font: fonts/NotoSansKR-Bold.ttf
+        - type: line
+          x_start: 5
+          y_start: 58
+          x_end: 291
+          y_end: 58
+          width: 1
+          fill: gray
+        - type: icon
+          value: access-point
+          x: 8
+          y: 61
+          size: 28
+          color: black
+        - type: text
+          value: CGM
+          x: 44
+          y: 68
+          anchor: lt
+          size: 18
+          color: black
+          font: fonts/NotoSansKR-Bold.ttf
+        - type: text
+          value: >-
+            {% set value = states(cgm_due_entity) %}
+            {% if value in ['unknown', 'unavailable', 'none', ''] %}
+              —
+            {% else %}
+              {% set days = (as_datetime(value).date() - now().date()).days %}
+              {% if (as_datetime(value) - now()).total_seconds() <= 0 %}OVERDUE
+              {% elif days == 0 %}Today
+              {% elif days == 1 %}Tomorrow
+              {% else %}In {{ days }}d{% endif %}
+            {% endif %}
+          x: 290
+          y: 68
+          anchor: rt
+          size: 18
+          color: >-
+            {% set value = states(cgm_due_entity) %}
+            {% if value not in ['unknown', 'unavailable', 'none', ''] and
+                  (as_datetime(value) - now()).total_seconds() <= 86400 %}
+              red
+            {% else %}black{% endif %}
+          font: fonts/NotoSansKR-Bold.ttf
+        - type: line
+          x_start: 5
+          y_start: 90
+          x_end: 291
+          y_end: 90
+          width: 1
+          fill: gray
+        - type: icon
+          value: >-
+            {% set level = states(pump_battery_level_entity) | int(-1) %}
+            {% if level < 0 %}battery-heart
+            {% elif level >= 75 %}battery
+            {% elif level >= 50 %}battery-60
+            {% elif level >= 25 %}battery-30
+            {% elif level > 0 %}battery-outline
+            {% else %}battery-alert{% endif %}
+          x: 8
+          y: 95
+          size: 28
+          color: >-
+            {% if states(pump_battery_level_entity) | int(-1) <= 50 %}red
+            {% else %}black{% endif %}
+        - type: text
+          value: Pump battery
+          x: 44
+          y: 100
+          anchor: lt
+          size: 18
+          color: black
+          font: fonts/NotoSansKR-Bold.ttf
+        - type: text
+          value: >-
+            {% set value = states(pump_battery_due_entity) %}
+            {% if value in ['unknown', 'unavailable', 'none', ''] %}
+              —
+            {% else %}
+              {% set days = (as_datetime(value).date() - now().date()).days %}
+              {% if (as_datetime(value) - now()).total_seconds() <= 0 %}EMPTY
+              {% elif days == 0 %}Today
+              {% elif days == 1 %}Tomorrow
+              {% else %}In {{ days }}d{% endif %}
+            {% endif %}
+          x: 290
+          y: 100
+          anchor: rt
+          size: 18
+          color: >-
+            {% set value = states(pump_battery_due_entity) %}
+            {% if value not in ['unknown', 'unavailable', 'none', ''] and
+                  (as_datetime(value) - now()).total_seconds() <= 86400 %}
+              red
+            {% else %}black{% endif %}
+          font: fonts/NotoSansKR-Bold.ttf

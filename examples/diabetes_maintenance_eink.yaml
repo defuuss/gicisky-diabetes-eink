@@ -1,0 +1,12 @@
+alias: Diabetes maintenance display
+use_blueprint:
+  path: YOUR_GITHUB_OWNER/diabetes_maintenance_eink.yaml
+  input:
+    eink_devices:
+      - YOUR_BLE_ESL_DEVICE_ID
+      - OPTIONAL_SECOND_BLE_ESL_DEVICE_ID
+    catheter_due: sensor.catheter_next_change
+    cgm_due: sensor.carelink_sensor_timer
+    pump_battery_level: sensor.pump_battery_level_valid
+    pump_battery_due: sensor.pump_battery_predicted_empty_at
+    title: Tasks
