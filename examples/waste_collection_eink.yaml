@@ -1,0 +1,13 @@
+alias: Waste collection display
+use_blueprint:
+  path: defuuss/waste_collection_eink.yaml
+  input:
+    eink_devices:
+      - YOUR_BLE_ESL_DEVICE_ID
+    waste_sensors:
+      - sensor.waste_organic
+      - sensor.waste_general
+      - sensor.waste_recycling
+      - sensor.waste_paper
+      - sensor.waste_glass
+    title: Waste collection

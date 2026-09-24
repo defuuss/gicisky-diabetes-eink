@@ -1,8 +1,13 @@
-# Diabetes maintenance e-ink display for Home Assistant
+# Home Assistant e-ink display blueprints
 
-A reusable Home Assistant **script blueprint** that renders catheter, CGM, and pump-battery replacement information on one or more 2.9-inch (296×128) BWR BLE electronic shelf labels.
+Reusable Home Assistant **script blueprints** for 2.9-inch (296×128) BWR BLE electronic shelf labels.
 
-It uses the actively maintained [`BLE ESL`](https://github.com/eigger/hass-ble-esl) integration and its `ble_esl.write` action. The older `hass-gicisky` integration was archived in September 2026; use BLE ESL instead.
+They use the actively maintained [`BLE ESL`](https://github.com/eigger/hass-ble-esl) integration and its `ble_esl.write_guarded` action. The older `hass-gicisky` integration was archived in September 2026; use BLE ESL instead.
+
+## Included blueprints
+
+- [Diabetes maintenance display](blueprints/script/diabetes_maintenance_eink.yaml) — catheter, CGM, and pump-battery replacement information.
+- [Waste collection schedule](blueprints/script/waste_collection_eink.yaml) — the next three Waste Collection Schedule pickups.
 
 ## What it displays
 
@@ -24,7 +29,7 @@ The display is sent to every device selected in the blueprint, so the same infor
    - pump battery percentage
 4. A Bluetooth adapter or ESPHome Bluetooth proxy that can reach the labels.
 
-## Install
+## Install the diabetes-maintenance blueprint
 
 1. Download `blueprints/script/diabetes_maintenance_eink.yaml`.
 2. Copy it into Home Assistant at:
@@ -41,6 +46,17 @@ The display is sent to every device selected in the blueprint, so the same infor
 The blueprint uses `ble_esl.write_guarded`: with BLE ESL's **Prevent Duplicate Send** option enabled, unchanged frames are skipped and bursts of sensor updates are coalesced. This reduces BLE traffic and avoids redundant e-ink refreshes. Set the integration's debounce delay to suit the update frequency you want.
 
 `examples/diabetes_maintenance_eink.yaml` shows the resulting script configuration. It deliberately contains placeholders instead of device IDs or personal sensor names.
+
+## Install the waste-collection blueprint
+
+1. Import [waste_collection_eink.yaml](https://github.com/defuuss/gicisky-diabetes-eink/blob/main/blueprints/script/waste_collection_eink.yaml) from Home Assistant’s **Blueprint import** screen, or copy it to `/config/blueprints/script/<your-folder>/`.
+2. Create a script from **Waste collection e-ink schedule**.
+3. Select the display or displays and all relevant Waste Collection Schedule sensors. Their numeric states must be the days until collection.
+4. Run the generated script when a waste sensor changes and once just after midnight, so the `Today`/`Tomorrow` text stays current.
+
+The blueprint sorts all selected sensors by their numeric state, shows the closest three collections, uses each sensor’s friendly name and icon, and turns a pickup red when it is today or tomorrow. It deliberately has no dependency on local image files or personal sensor IDs.
+
+`examples/waste_collection_eink.yaml` shows the resulting script configuration with generic, replaceable sensor names.
 
 ## Triggering from an automation
 
@@ -63,7 +79,7 @@ mode: single
 
 ## Sharing
 
-This is a script blueprint, not a scene. Script blueprints are the portable Home Assistant format for a reusable, configurable display action. Import it from [GitHub](https://github.com/defuuss/gicisky-diabetes-eink/blob/main/blueprints/script/diabetes_maintenance_eink.yaml) in Home Assistant’s Blueprint import screen, or copy it to your local `blueprints/script/` folder.
+These are script blueprints, not scenes. Script blueprints are the portable Home Assistant format for reusable, configurable display actions. Import them from the GitHub links above in Home Assistant’s Blueprint import screen, or copy them to your local `blueprints/script/` folder.
 
 Do not commit Home Assistant `.storage`, access tokens, Bluetooth device IDs, or health data. The blueprint itself has no personal IDs or credentials.
 
